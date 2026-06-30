@@ -8,6 +8,8 @@
 - 使用 Rust 编写定时与业务逻辑：`src/main.rs`
 - 支持每天固定时间提醒
 - 支持每隔 N 分钟提醒
+- 支持每条提醒单独设置生效时间段，例如 09:00 到 22:00
+- 支持每条提醒单独设置生效星期范围，例如周一到周五
 - 弹窗置顶显示
 - 支持“我知道了”和“5 分钟后再提醒”
 - 可配置当前用户开机自动启动
@@ -48,7 +50,7 @@ cargo run -- --dev-immediate
 SCREEN_REMINDER_DEV_IMMEDIATE=1 cargo run
 ```
 
-立即模式只是在启动时把 `reminders.toml` 中的提醒立即触发一遍，之后正常定时逻辑仍然继续运行。
+立即模式只是在启动时把 `reminders.toml` 中的第一条提醒立即触发一次，之后正常定时逻辑仍然继续运行。
 
 ## 配置提醒
 
@@ -93,6 +95,34 @@ title = "休息眼睛"
 message = "看看远处，放松眼睛 1 分钟。"
 every_minutes = 45
 ```
+
+### 设置提醒生效时间段和星期范围
+
+每条提醒都可以单独配置：
+
+```toml
+[[reminders]]
+title = "喝水提醒"
+message = "起来活动一下，喝一杯水。"
+every_minutes = 20
+
+# 仅在每天 09:00 到 22:00 之间生效，不会夜里提醒
+active_start = "09:00"
+active_end = "22:00"
+
+# 仅周一到周五生效
+weekday_start = "mon"
+weekday_end = "fri"
+```
+
+说明：
+
+- `active_start` / `active_end` 不填表示全天生效。
+- `weekday_start` / `weekday_end` 不填表示全周生效。
+- 星期支持：`mon`、`tue`、`wed`、`thu`、`fri`、`sat`、`sun`。
+- 也支持中文：`周一`、`周二`、`周三`、`周四`、`周五`、`周六`、`周日`。
+- 时间段支持跨午夜，例如 `active_start = "22:00"`、`active_end = "06:00"`。
+- 星期范围支持跨周，例如 `weekday_start = "fri"`、`weekday_end = "mon"`。
 
 ## 打包构建
 

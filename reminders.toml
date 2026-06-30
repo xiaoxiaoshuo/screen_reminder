@@ -16,9 +16,19 @@ renderer = "software"
 [[reminders]]
 title = "喝水提醒"
 message = "起来活动一下，喝一杯水。"
-at = "09:30"
+every_minutes = 20
+# 仅在 09:00 到 22:00 生效，避免夜里提醒
+active_start = "09:00"
+active_end = "22:00"
+# 仅周一到周五生效
+weekday_start = "mon"
+weekday_end = "fri"
 
 [[reminders]]
 title = "休息眼睛"
 message = "看看远处，放松眼睛 1 分钟。"
 every_minutes = 45
+active_start = "09:00"
+active_end = "22:00"
+weekday_start = "mon"
+weekday_end = "fri"

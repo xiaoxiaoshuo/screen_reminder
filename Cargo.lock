@@ -3898,6 +3898,7 @@ name = "screen_reminder"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "raw-window-handle",
  "serde",
  "slint",
  "slint-build",
@@ -4125,6 +4126,7 @@ dependencies = [
  "num-traits",
  "once_cell",
  "pin-weak",
+ "raw-window-handle",
  "slint-macros",
  "unicode-segmentation",
  "vtable",

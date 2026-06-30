@@ -12,14 +12,16 @@ slint = { version = "1.17", default-features = false, features = [
     "renderer-software",
     "compat-1-2",
     "system-tray",
+    "raw-window-handle-06",
 ] }
 chrono = { version = "0.4", features = ["clock"] }
 serde = { version = "1", features = ["derive"] }
 toml = "0.8"
+raw-window-handle = "0.6"
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.55"
-windows-sys = { version = "0.59", features = ["Win32_UI_WindowsAndMessaging"] }
+windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_UI_HiDpi", "Win32_UI_WindowsAndMessaging"] }
 
 [build-dependencies]
 slint-build = "1.8"
