@@ -4,7 +4,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use crate::config::ReminderConfig;
+use crate::{config::ReminderConfig, logging::log_line};
 
 #[derive(Debug, Clone)]
 pub struct ReminderEvent {
@@ -27,6 +27,7 @@ pub fn start_scheduler(
     tx: std::sync::mpsc::Sender<ReminderEvent>,
 ) {
     thread::spawn(move || {
+        log_line(format!("scheduler thread started: reminders={}", reminders.len()));
         let mut runtimes: Vec<ReminderRuntime> = reminders
             .into_iter()
             .map(|config| ReminderRuntime {
@@ -57,6 +58,10 @@ pub fn start_scheduler(
                             && runtime.last_daily_date.as_deref() != Some(&today)
                         {
                             runtime.last_daily_date = Some(today.clone());
+                            log_line(format!(
+                                "scheduler send daily event: id={}, title={}, at={}",
+                                id, runtime.config.title, at
+                            ));
                             let _ = tx.send(ReminderEvent {
                                 id,
                                 title: runtime.config.title.clone(),
@@ -73,6 +78,10 @@ pub fn start_scheduler(
                         let minutes = runtime.config.every_minutes.unwrap_or(1);
                         runtime.next_interval_at =
                             Some(instant_now + Duration::from_secs(minutes * 60));
+                        log_line(format!(
+                            "scheduler send interval event: id={}, title={}, every_minutes={}",
+                            id, runtime.config.title, minutes
+                        ));
                         let _ = tx.send(ReminderEvent {
                             id,
                             title: runtime.config.title.clone(),
@@ -97,6 +106,7 @@ pub fn send_immediate_test_reminders(
     tx: &std::sync::mpsc::Sender<ReminderEvent>,
 ) {
     if let Some(reminder) = reminders.first() {
+        log_line(format!("dev immediate send event: id=0, title={}", reminder.title));
         let _ = tx.send(ReminderEvent {
             id: 0,
             title: format!("[测试] {}", reminder.title),

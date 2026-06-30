@@ -16,6 +16,11 @@ export component ReminderWindow inherits Window {
     in property <length> card-w: 680px;
     in property <length> card-h: 380px;
 
+    // Slint 的根窗口内容尺寸也显式绑定到 Rust 计算出的逻辑尺寸。
+    // 否则原生窗口已经全屏，但 UI 根内容在某些时机可能仍是旧尺寸。
+    width: root.window-w;
+    height: root.window-h;
+
     // 内容
     in property <bool> fullscreen-reminder: false;
     in property <string> reminder-title: "提醒";
@@ -25,6 +30,10 @@ export component ReminderWindow inherits Window {
 
     callback dismissed();
     callback snooze();
+
+    public function focus-reminder() {
+        key-layer.focus();
+    }
 
     forward-focus: key-layer;
 
