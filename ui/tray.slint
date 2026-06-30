@@ -1,0 +1,24 @@
+export component AppTray inherits SystemTrayIcon {
+    icon: @image-url("../assets/tray-icon.png");
+    tooltip: "屏幕提醒正在后台运行";
+    title: "屏幕提醒";
+
+    callback show_reminder();
+    callback quit();
+
+    clicked => {
+        show_reminder();
+    }
+
+    Menu {
+        MenuItem {
+            title: "显示测试提醒";
+            activated => { root.show_reminder(); }
+        }
+        MenuSeparator { }
+        MenuItem {
+            title: "退出";
+            activated => { root.quit(); }
+        }
+    }
+}
