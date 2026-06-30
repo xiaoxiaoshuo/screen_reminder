@@ -1,5 +1,6 @@
 use crate::{logging::log_line, ReminderWindow};
 use slint::{ComponentHandle, PhysicalPosition, PhysicalSize};
+use std::time::Duration;
 
 /// 根据全屏/窗口模式设置窗口尺寸与卡片几何。
 ///
@@ -95,21 +96,70 @@ pub fn show_reminder(ui: &ReminderWindow, event: &crate::scheduler::ReminderEven
         return false;
     }
     log_line("ui.show success");
+    log_window_focus_state(ui, "after ui.show");
 
     // show() 后原生 HWND 才一定存在。再次同步尺寸并强制置顶，
     // 避免 Windows/winit 某些情况下只依赖 always-on-top 不稳定。
     apply_reminder_window_size(ui);
     force_window_topmost(ui);
     force_window_foreground(ui);
+    log_window_focus_state(ui, "after foreground request");
     ui.invoke_focus_reminder();
+    log_window_focus_state(ui, "after slint focus-reminder");
     ui.window().request_redraw();
+
+    // 第一次自动弹窗时，Windows 有时会先显示置顶窗口，但延迟一小会儿才允许焦点切换。
+    // 这里做一次 150ms 后的二次置顶/前台/Slint 聚焦，并记录状态，方便定位 Esc 不生效。
+    let ui_weak = ui.as_weak();
+    slint::Timer::single_shot(Duration::from_millis(150), move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            log_line("delayed focus retry begin");
+            force_window_topmost(&ui);
+            force_window_foreground(&ui);
+            log_window_focus_state(&ui, "after delayed foreground request");
+            ui.invoke_focus_reminder();
+            log_window_focus_state(&ui, "after delayed slint focus-reminder");
+            ui.window().request_redraw();
+            log_line("delayed focus retry end");
+        } else {
+            log_line("delayed focus retry skipped: window already dropped");
+        }
+    });
+
     log_line("show_reminder end: topmost/foreground/focus/redraw requested");
     true
 }
 
 // ---------------------------------------------------------------------------
-// Windows 原生置顶
+// Windows 原生置顶 / 焦点诊断
 // ---------------------------------------------------------------------------
+
+#[cfg(windows)]
+fn log_window_focus_state(ui: &ReminderWindow, label: &str) {
+    use windows_sys::Win32::UI::Input::KeyboardAndMouse::{GetActiveWindow, GetFocus};
+    use windows_sys::Win32::UI::WindowsAndMessaging::GetForegroundWindow;
+
+    let hwnd = hwnd_for(ui).unwrap_or(std::ptr::null_mut());
+    let foreground = unsafe { GetForegroundWindow() };
+    let active = unsafe { GetActiveWindow() };
+    let focus = unsafe { GetFocus() };
+
+    log_line(format!(
+        "focus state [{label}]: hwnd={:?}, foreground={:?}, active={:?}, focus={:?}, hwnd_is_foreground={}, hwnd_is_active={}, hwnd_is_focus={}",
+        hwnd,
+        foreground,
+        active,
+        focus,
+        hwnd == foreground,
+        hwnd == active,
+        hwnd == focus
+    ));
+}
+
+#[cfg(not(windows))]
+fn log_window_focus_state(_ui: &ReminderWindow, label: &str) {
+    log_line(format!("focus state [{label}]: non-windows"));
+}
 
 #[cfg(windows)]
 fn force_window_topmost(ui: &ReminderWindow) {

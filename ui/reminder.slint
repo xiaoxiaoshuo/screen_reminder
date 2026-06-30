@@ -30,8 +30,10 @@ export component ReminderWindow inherits Window {
 
     callback dismissed();
     callback snooze();
+    callback debug-log(string);
 
     public function focus-reminder() {
+        root.debug-log("slint focus-reminder called");
         key-layer.focus();
     }
 
@@ -47,9 +49,19 @@ export component ReminderWindow inherits Window {
         focus-on-click: true;
         focus-on-tab-navigation: true;
 
+        focus-gained(reason) => {
+            root.debug-log("slint key-layer focus gained");
+        }
+
+        focus-lost(reason) => {
+            root.debug-log("slint key-layer focus lost");
+        }
+
         // capture-key-pressed 比 key-pressed 更早执行，能在按钮/子控件处理前拦截 Esc。
         capture-key-pressed(event) => {
+            root.debug-log("slint capture-key-pressed: " + event.text);
             if (root.close-on-escape && event.text == Key.Escape) {
+                root.debug-log("slint escape accepted: dismissed");
                 root.dismissed();
                 return accept;
             }

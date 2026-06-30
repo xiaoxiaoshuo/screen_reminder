@@ -171,6 +171,10 @@ fn show_event_in_new_window(
     ui.set_close_on_escape(close_on_escape);
     ui.set_fullscreen_reminder(fullscreen_reminder);
 
+    ui.on_debug_log(|message| {
+        log_line(format!("ui debug: {message}"));
+    });
+
     {
         let cur = current_event.clone();
         let window_slot = current_window.clone();
